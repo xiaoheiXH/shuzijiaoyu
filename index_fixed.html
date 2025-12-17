@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教室俯视图设计器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e1e5eb;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .coordinate-info {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .coord-box {
+            background: #f8f9fa;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            font-size: 14px;
+        }
+
+        .coord-box span {
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .left-panel {
+            flex: 1;
+            min-width: 320px;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e1e5eb;
+            display: flex;
+            flex-direction: column;
+            max-height: 800px;
+        }
+
+        .right-panel {
+            flex: 2;
+            min-width: 600px;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e1e5eb;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f2f6;
+        }
+
+        .elements-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .element-item {
+            background: #f8f9fa;
+            border: 2px dashed #bdc3c7;
+            border-radius: 8px;
+            padding: 15px 10px;
+            text-align: center;
+            cursor: grab;
+            transition: all 0.2s ease;
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .element-item:hover {
+            border-color: #3498db;
+            background: #e3f2fd;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(52, 152, 219, 0.2);
+        }
+
+        .element-item:active {
+            cursor: grabbing;
+        }
+
+        .element-icon {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .element-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .element-size {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 4px;
+        }
+
+        .element-limit {
+            font-size: 11px;
+            color: #e74c3c;
+            margin-top: 2px;
+            font-weight: 500;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            background-color: #F9DA89;
+            border-radius: 8px;
+            overflow: auto;
+            border: 2px solid #d4ac6e;
+            flex: 1;
+        }
+
+        .canvas-inner {
+            position: relative;
+            width: 750px;
+            height: 650px;
+        }
+
+        .coordinate-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .fixed-shape {
+            position: absolute;
+            border: 2px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        .main-room {
+            background-color: #F9DA89;
+            border: 3px solid #d4ac6e;
+        }
+
+        .shape-1, .shape-2, .shape-3 {
+            background-color: #F9DA89;
+            border: 2px solid #d4ac6e;
+        }
+
+        .square-1 {
+            background-color: #E91E63;
+        }
+
+        .square-2 {
+            background-color: #9C27B0;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .save-btn {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .save-btn:hover {
+            background: #27ae60;
+            box-shadow: 0 4px 8px rgba(46, 204, 113, 0.3);
+        }
+
+        .reset-btn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .reset-btn:hover {
+            background: #c0392b;
+            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+        }
+
+        .export-btn {
+            background: #3498db;
+            color: white;
+        }
+
+        .export-btn:hover {
+            background: #2980b9;
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+        }
+
+        .instructions {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .instructions h3 {
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .instructions ul {
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+        }
+
+        .element-info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            font-size: 14px;
+            border: 1px solid #e1e5eb;
+            z-index: 100;
+            min-width: 250px;
+        }
+
+        .element-info.hidden {
+            display: none;
+        }
+
+        .draggable-element {
+            position: absolute;
+            cursor: move;
+            z-index: 5;
+            transition: transform 0.1s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            user-select: none;
+            overflow: hidden;
+            transform-origin: center;
+        }
+
+        .draggable-element:hover {
+            z-index: 15;
+        }
+
+        .draggable-element.selected {
+            outline: 3px dashed #3498db;
+            z-index: 10;
+        }
+
+        .draggable-icon {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .draggable-label {
+            font-size: 10px;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-top: 4px;
+        }
+
+        .coord-inputs {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .coord-inputs input {
+            width: 80px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .update-btn {
+            padding: 8px 12px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .update-btn:hover {
+            background: #2980b9;
+        }
+
+        .delete-btn {
+            padding: 8px 12px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+
+        .element-delete-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            font-size: 12px;
+            line-height: 20px;
+            text-align: center;
+            cursor: pointer;
+            z-index: 20;
+            display: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .draggable-element.selected .element-delete-btn {
+            display: block;
+        }
+
+        .element-delete-btn:hover {
+            background: #c0392b;
+            transform: scale(1.1);
+        }
+
+        .counter {
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            background: #3498db;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+        }
+
+        /* 特殊元素样式 */
+        .chair {
+            border-radius: 4px;
+            background-color: #8BC34A;
+        }
+
+        .table-rect {
+            background-color: #795548;
+        }
+
+        .table-round {
+            border-radius: 100%;
+            background-color: #8D6E63 !important;
+            border: 3px solid #5D4037 !important;
+            box-shadow: 0 0 8px rgba(0,0,0,0.3) !important;
+            opacity: 0.7 !important;
+            z-index: 1000 !important;
+        }
+
+        .table-semi-round {
+            background-color: transparent;
+            position: relative;
+        }
+
+        .door-double {
+            background-color: #8D6E63;
+        }
+
+        .door-single {
+            background-color: #8D6E63;
+        }
+
+        .cabinet {
+            background-color: #A1887F;
+            background-image: 
+                linear-gradient(to right, #8D6E63 1px, transparent 1px),
+                linear-gradient(to bottom, #8D6E63 1...
