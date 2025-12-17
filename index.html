@@ -314,6 +314,27 @@
             min-width: 250px;
         }
 
+        .element-info .close-btn {
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: none;
+            background: #e0e0e0;
+            color: #555;
+            font-size: 14px;
+            line-height: 20px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .element-info .close-btn:hover {
+            background: #d32f2f;
+            color: #fff;
+        }
+
         .element-info.hidden {
             display: none;
         }
@@ -874,7 +895,8 @@
                     
                     <!-- 坐标信息面板 -->
                     <div class="element-info hidden" id="element-info">
-                        <div id="info-title" style="font-weight: 600; margin-bottom: 8px;">元素信息</div>
+                        <button class="close-btn" id="element-info-close" title="关闭">×</button>
+                        <div id="info-title" style="font-weight: 600; margin-bottom: 8px; padding-right: 20px;">元素信息</div>
                         <div id="info-coords" style="margin-bottom: 5px;">坐标: (0, 0)</div>
                         <div id="info-size" style="margin-bottom: 5px;">尺寸: 0m × 0m</div>
                         <div id="info-rotation" style="margin-bottom: 5px;">旋转: 0°</div>
@@ -1322,6 +1344,22 @@
                 saveDesign();      // 保存到 localStorage（供自动恢复使用）
                 exportDesign();    // 仅在手动点击“保存设计”时导出并下载
             });
+
+            // 元素信息面板关闭按钮
+            const infoCloseBtn = document.getElementById('element-info-close');
+            if (infoCloseBtn) {
+                infoCloseBtn.addEventListener('click', () => {
+                    const infoPanel = document.getElementById('element-info');
+                    if (infoPanel) {
+                        infoPanel.classList.add('hidden');
+                    }
+                    // 清除所有已选中的元素高亮
+                    document.querySelectorAll('.draggable-element').forEach(el => {
+                        el.classList.remove('selected');
+                    });
+                    selectedElement = null;
+                });
+            }
             
             // 重置设计按钮
             document.getElementById('reset-design').addEventListener('click', resetDesign);
