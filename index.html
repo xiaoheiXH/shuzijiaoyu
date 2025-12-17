@@ -1,9 +1,2491 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <title>Fixed Index</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教室俯视图设计器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e1e5eb;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .coordinate-info {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .coord-box {
+            background: #f8f9fa;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            font-size: 14px;
+        }
+
+        .coord-box span {
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .left-panel {
+            flex: 1;
+            min-width: 320px;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e1e5eb;
+            display: flex;
+            flex-direction: column;
+            max-height: 800px;
+        }
+
+        .right-panel {
+            flex: 2;
+            min-width: 600px;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e1e5eb;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f2f6;
+        }
+
+        .elements-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .element-item {
+            background: #f8f9fa;
+            border: 2px dashed #bdc3c7;
+            border-radius: 8px;
+            padding: 15px 10px;
+            text-align: center;
+            cursor: grab;
+            transition: all 0.2s ease;
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .element-item:hover {
+            border-color: #3498db;
+            background: #e3f2fd;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(52, 152, 219, 0.2);
+        }
+
+        .element-item:active {
+            cursor: grabbing;
+        }
+
+        .element-icon {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .element-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .element-size {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 4px;
+        }
+
+        .element-limit {
+            font-size: 11px;
+            color: #e74c3c;
+            margin-top: 2px;
+            font-weight: 500;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            background-color: #F9DA89;
+            border-radius: 8px;
+            overflow: auto;
+            border: 2px solid #d4ac6e;
+            flex: 1;
+        }
+
+        .canvas-inner {
+            position: relative;
+            width: 750px;
+            height: 650px;
+        }
+
+        .coordinate-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .fixed-shape {
+            position: absolute;
+            border: 2px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        .main-room {
+            background-color: #F9DA89;
+            border: 3px solid #d4ac6e;
+        }
+
+        .shape-1, .shape-2, .shape-3 {
+            background-color: #F9DA89;
+            border: 2px solid #d4ac6e;
+        }
+
+        .square-1 {
+            background-color: #E91E63;
+        }
+
+        .square-2 {
+            background-color: #9C27B0;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .save-btn {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .save-btn:hover {
+            background: #27ae60;
+            box-shadow: 0 4px 8px rgba(46, 204, 113, 0.3);
+        }
+
+        .reset-btn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .reset-btn:hover {
+            background: #c0392b;
+            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+        }
+
+        .export-btn {
+            background: #3498db;
+            color: white;
+        }
+
+        .export-btn:hover {
+            background: #2980b9;
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+        }
+
+        .instructions {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .instructions h3 {
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .instructions ul {
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+        }
+
+        .element-info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            font-size: 14px;
+            border: 1px solid #e1e5eb;
+            z-index: 100;
+            min-width: 250px;
+        }
+
+        .element-info.hidden {
+            display: none;
+        }
+
+        .draggable-element {
+            position: absolute;
+            cursor: move;
+            z-index: 5;
+            transition: transform 0.1s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            user-select: none;
+            overflow: hidden;
+            transform-origin: center;
+        }
+
+        .draggable-element:hover {
+            z-index: 15;
+        }
+
+        .draggable-element.selected {
+            outline: 3px dashed #3498db;
+            z-index: 10;
+        }
+
+        .draggable-icon {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .draggable-label {
+            font-size: 10px;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-top: 4px;
+        }
+
+        .coord-inputs {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .coord-inputs input {
+            width: 80px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .update-btn {
+            padding: 8px 12px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .update-btn:hover {
+            background: #2980b9;
+        }
+
+        .delete-btn {
+            padding: 8px 12px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+
+        .element-delete-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            font-size: 12px;
+            line-height: 20px;
+            text-align: center;
+            cursor: pointer;
+            z-index: 20;
+            display: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .draggable-element.selected .element-delete-btn {
+            display: block;
+        }
+
+        .element-delete-btn:hover {
+            background: #c0392b;
+            transform: scale(1.1);
+        }
+
+        .counter {
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            background: #3498db;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+        }
+
+        /* 特殊元素样式 */
+        .chair {
+            border-radius: 4px;
+            background-color: #8BC34A;
+        }
+
+        .table-rect {
+            background-color: #795548;
+        }
+
+        .table-round {
+            border-radius: 100%;
+            background-color: #8D6E63 !important;
+            border: 3px solid #5D4037 !important;
+            box-shadow: 0 0 8px rgba(0,0,0,0.3) !important;
+            opacity: 0.7 !important;
+            z-index: 1000 !important;
+        }
+
+        .table-semi-round {
+            background-color: transparent;
+            position: relative;
+        }
+
+        .door-double {
+            background-color: #8D6E63;
+        }
+
+        .door-single {
+            background-color: #8D6E63;
+        }
+
+        .cabinet {
+            background-color: #A1887F;
+            background-image: 
+                linear-gradient(to right, #8D6E63 1px, transparent 1px),
+                linear-gradient(to bottom, #8D6E63 1px, transparent 1px);
+            background-size: 15px 15px;
+        }
+
+        .cabinet-long {
+            background-color: #A1887F;
+            background-image: 
+                linear-gradient(to right, #8D6E63 1px, transparent 1px),
+                linear-gradient(to bottom, #8D6E63 1px, transparent 1px);
+            background-size: 30px 15px;
+        }
+
+        .floor-socket {
+            background-color: #757575;
+            border-radius: 4px;
+        }
+
+        .plant {
+            background-color: #DFEBB2;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            position: relative;
+        }
+
+        .plant::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            width: 5px;
+            height: 5px;
+            background-color: #8BC34A;
+            border-radius: 50%;
+        }
+
+        .plant::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            right: 5px;
+            width: 3px;
+            height: 3px;
+            background-color: #8BC34A;
+            border-radius: 50%;
+        }
+
+        .shape-label {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            font-size: 9px;
+            color: white;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.3);
+            padding: 1px 3px;
+            border-radius: 2px;
+            pointer-events: none;
+        }
+
+        /* 旋转控制点样式 */
+        .rotate-handle {
+            position: absolute;
+            bottom: -20px;
+            right: -20px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #3498db;
+            color: white;
+            border: 2px solid white;
+            cursor: pointer;
+            z-index: 30;
+            display: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .draggable-element.selected .rotate-handle {
+            display: block;
+        }
+
+        .rotate-handle:hover {
+            background: #2980b9;
+            transform: scale(1.1);
+        }
+
+        .rotate-handle::after {
+            content: '↻';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 10px;
+        }
+
+        /* 半圆桌特殊样式 - 重新设计 */
+        .semi-table-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .semi-table-rectangle {
+            position: absolute;
+            width: 75px; /* 1.5m = 75px */
+            height: 37.5px; /* 0.75m = 37.5px */
+            background-color: #795548;
+            border-radius: 4px;
+            left: 0;
+            top: 0;
+        }
+
+        .semi-table-semicircle {
+            position: absolute;
+            width: 75px; /* 直径1.5m = 75px */
+            height: 37.5px; /* 半径0.75m = 37.5px */
+            background-color: #795548;
+            border-radius: 0 0 75px 75px;
+            left: 0;
+            top: 37.5px; /* 半圆在矩形下方 */
+            opacity: 0.5;
+        }
+
+        .semi-table-dashed-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            top: 37.5px;
+            left: 0;
+            border-top: 1px dashed white;
+            z-index: 1;
+        }
+
+        /* 三角形桌子特殊样式 */
+        .table-sector {
+            background-color: #795548;
+            border: 2px solid #5D4037;
+            /* 等腰三角形，底边在下，顶点在上 */
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            border-radius: 0;
+            position: relative;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .left-panel, .right-panel {
+                min-width: 100%;
+            }
+            
+            .canvas-container {
+                height: 500px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .elements-container {
+                grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            }
+            
+            .canvas-container {
+                height: 400px;
+            }
+            
+            .control-btn {
+                flex: 1;
+                min-width: 120px;
+            }
+        }
+
+        /* 网格线样式 */
+        .grid-line {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .grid-line.x {
+            width: 100%;
+            height: 1px;
+            background: rgba(0, 0, 0, 0.1);
+            left: 0;
+        }
+
+        .grid-line.y {
+            height: 100%;
+            width: 1px;
+            background: rgba(0, 0, 0, 0.1);
+            top: 0;
+        }
+
+        /* 坐标轴样式 */
+        .axis {
+            position: absolute;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .axis.x {
+            width: 100%;
+            height: 2px;
+            background: #e74c3c;
+            left: 0;
+            top: 0;
+        }
+
+        .axis.y {
+            height: 100%;
+            width: 2px;
+            background: #e74c3c;
+            top: 0;
+            left: 0;
+        }
+
+        .axis-label {
+            position: absolute;
+            font-size: 12px;
+            color: #e74c3c;
+            font-weight: bold;
+            pointer-events: none;
+        }
+
+        .meter-mark {
+            position: absolute;
+            background: #3498db;
+            pointer-events: none;
+        }
+
+        .meter-mark.x {
+            width: 1px;
+            height: 8px;
+            top: -4px;
+        }
+
+        .meter-mark.y {
+            width: 8px;
+            height: 1px;
+            left: -4px;
+        }
+
+        .meter-label {
+            position: absolute;
+            font-size: 9px;
+            color: #3498db;
+            pointer-events: none;
+        }
+
+        /* 统计信息样式 */
+        .stats-panel {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            border: 1px solid #e1e5eb;
+        }
+
+        .stats-title {
+            font-size: 16px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+
+        .stat-name {
+            font-size: 13px;
+            color: #495057;
+        }
+
+        .stat-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        /* 旋转控制输入框 */
+        .rotation-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            align-items: center;
+        }
+
+        .rotation-controls input {
+            width: 80px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .rotation-value {
+            font-size: 14px;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        /* 元素透明度 */
+        .draggable-element {
+            opacity: 0.7;
+        }
+
+        .fixed-shape {
+            opacity: 1;
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome to the fixed index page!</h1>
+    <div class="container">
+        <header>
+            <h1>教室俯视图设计器</h1>
+            <p class="subtitle">拖拽左侧元素到右侧教室俯视图中，点击元素可查看和编辑坐标，点击删除按钮可移除元素</p>
+            <div class="coordinate-info">
+                <div class="coord-box">坐标系原点：<span>左上角 (0, 0)</span></div>
+                <div class="coord-box">X轴方向：<span>水平向右</span></div>
+                <div class="coord-box">Y轴方向：<span>垂直向下</span></div>
+                <div class="coord-box">比例尺：<span>1米 = 50像素</span></div>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <div class="left-panel">
+                <h2 class="panel-title">教室元素库</h2>
+                <p style="margin-bottom: 15px; color: #7f8c8d; font-size: 14px;">拖拽元素到右侧教室中</p>
+                
+                <div class="elements-container" id="elementsContainer">
+                    <!-- 元素将通过JavaScript动态生成 -->
+                </div>
+                
+                <div class="instructions">
+                    <h3>使用说明</h3>
+                    <ul>
+                        <li>拖拽左侧元素到教室俯视图中</li>
+                        <li>点击教室中的元素可以选中并查看坐标</li>
+                        <li>点击元素右上角的×按钮可以删除该元素</li>
+                        <li>拖拽右下角的蓝色圆点可以旋转元素</li>
+                        <li>修改坐标后点击"更新位置"按钮应用更改</li>
+                        <li>点击"保存设计"按钮保存当前布局</li>
+                        <li>元素数量上限：每个元素类型有最大放置数量限制</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="right-panel">
+                <h2 class="panel-title">教室俯视图 (15m × 10m)</h2>
+                <div class="canvas-container" id="canvasContainer">
+                    <div class="canvas-inner" id="canvasInner">
+                        <!-- 网格线和坐标轴将通过JavaScript动态生成 -->
+                        <!-- 固定图形 -->
+                        <div class="fixed-shape main-room" id="main-room" style="width: 750px; height: 500px; left: 0px; top: 0px;">
+                            <!-- 主教室标签已删除 -->
+                        </div>
+                        <div class="fixed-shape shape-1" id="shape-1" style="width: 200px; height: 150px; left: 0px; top: 500px;">
+                            <div class="shape-label">会议室</div>
+                        </div>
+                        <div class="fixed-shape shape-2" id="shape-2" style="width: 125px; height: 175px; left: 625px; top: 325px;">
+                            <div class="shape-label">茶水间</div>
+                        </div>
+                        <div class="fixed-shape shape-3" id="shape-3" style="width: 100px; height: 45px; left: 325px; top: 25px;">
+                            <div class="shape-label">讲台</div>
+                        </div>
+                        <div class="fixed-shape square-1" id="square-1" style="width: 22.5px; height: 22.5px; left: 212.5px; top: 325px;">
+                            <div class="shape-label">柱</div>
+                        </div>
+                        <div class="fixed-shape square-2" id="square-2" style="width: 22.5px; height: 22.5px; left: 292.5px; top: 325px;">
+                            <div class="shape-label">柱</div>
+                        </div>
+                        
+                        <!-- 可拖拽元素容器 -->
+                        <div id="draggable-container"></div>
+                    </div>
+                    
+                    <!-- 坐标信息面板 -->
+                    <div class="element-info hidden" id="element-info">
+                        <div id="info-title" style="font-weight: 600; margin-bottom: 8px;">元素信息</div>
+                        <div id="info-coords" style="margin-bottom: 5px;">坐标: (0, 0)</div>
+                        <div id="info-size" style="margin-bottom: 5px;">尺寸: 0m × 0m</div>
+                        <div id="info-rotation" style="margin-bottom: 5px;">旋转: 0°</div>
+                        <div class="coord-inputs">
+                            <input type="number" id="coord-x" placeholder="X坐标(px)">
+                            <input type="number" id="coord-y" placeholder="Y坐标(px)">
+                            <button class="update-btn" id="update-coords">更新位置</button>
+                        </div>
+                        <div class="rotation-controls">
+                            <span>旋转角度:</span>
+                            <input type="number" id="rotation-angle" placeholder="角度(0-360)" min="0" max="360" step="0.1">
+                            <button class="update-btn" id="update-rotation">更新旋转</button>
+                            <div style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">提示：选中元素后自动聚焦，直接输入角度后按Enter更新 | 按R键快速聚焦</div>
+                        </div>
+                        <div class="size-controls" style="margin-top: 15px;">
+                            <div style="margin-bottom: 8px; font-weight: 500;">尺寸调整:</div>
+                            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                <span>宽度(m):</span>
+                                <input type="number" id="size-width" placeholder="宽度(米)" min="0" step="0.01" style="width: 100px;">
+                                <span>宽度(m):</span>
+                                <input type="number" id="size-height" placeholder="宽度(米)" min="0" step="0.01" style="width: 100px;">
+                                <button class="update-btn" id="update-size">更新尺寸</button>
+                            </div>
+                            <div style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">提示：输入尺寸后按Enter更新 | 按S键快速聚焦宽度输入框</div>
+                        </div>
+                        <button class="delete-btn" id="delete-element">删除元素</button>
+                    </div>
+                </div>
+                
+                <!-- 统计信息面板 -->
+                <div class="stats-panel" id="statsPanel">
+                    <div class="stats-title">元素统计</div>
+                    <div class="stats-grid" id="statsGrid">
+                        <!-- 统计信息将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button class="control-btn save-btn" id="save-design">保存设计</button>
+                    <button class="control-btn reset-btn" id="reset-design">重置设计</button>
+                    <button class="control-btn export-btn" id="export-design">导出配置</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 教室配置 - 1米=50px
+        const classroomConfig = {
+            width: 750,     // 15米 = 750px (15*50)
+            height: 500,    // 10米 = 500px (10*50)
+            scale: 1,       // 缩放比例
+            origin: { x: 0, y: 0 } // 原点位置（左上角）
+        };
+
+        // 固定图形配置 - 全部按照1米=50px比例
+        const fixedShapes = [
+            { id: 'main-room', x: 0, y: 0, width: 750, height: 500, color: '#F9DA89', name: '主教室', desc: '15m × 10m' },
+            { id: 'shape-1', x: 0, y: 500, width: 200, height: 150, color: '#F9DA89', name: '小长方形1', desc: '4m × 3m' },
+            { id: 'shape-2', x: 625, y: 325, width: 125, height: 175, color: '#F9DA89', name: '小长方形2', desc: '2.5m × 3.5m' },
+            { id: 'shape-3', x: 325, y: 25, width: 100, height: 45, color: '#F9DA89', name: '讲台', desc: '2m × 0.9m' },
+            { id: 'square-1', x: 212.5, y: 325, width: 22.5, height: 22.5, color: '#E91E63', name: '小正方形1', desc: '0.45m × 0.45m' },
+            { id: 'square-2', x: 292.5, y: 325, width: 22.5, height: 22.5, color: '#9C27B0', name: '小正方形2', desc: '0.45m × 0.45m' }
+        ];
+
+        // 可拖拽元素定义 - 全部按照1米=50px比例
+        const draggableElements = [
+            { 
+                id: 'chair', 
+                name: '椅子', 
+                width: 25, // 0.5米 = 25px (0.5*50)
+                height: 25, 
+                color: '#8BC34A', 
+                icon: '💺',
+                className: 'chair',
+                maxCount: 60,
+                desc: '0.5m × 0.5m',
+                shape: 'square'
+            },
+            { 
+                id: 'table-rect', 
+                name: '方桌', 
+                width: 210, // 4.2米 = 210px (4.2*50)
+                height: 45,  // 0.9米 = 45px (0.9*50)
+                color: '#795548', 
+                icon: '▭',
+                className: 'table-rect',
+                maxCount: 4,
+                desc: '4.2m × 0.9m',
+                shape: 'rectangle'
+            },
+            { 
+                id: 'table-round', 
+                name: '圆桌', 
+                width: 150, // 直径3米 = 150px (3*50)
+                height: 150, 
+                color: '#8D6E63',
+                icon: '⭕',
+                className: 'table-round',
+                 maxCount: 4,
+                 desc: '半径1.5m',
+                 shape: 'circle'
+            },
+            { 
+                id: 'table-semi-round', 
+                name: '半圆桌', 
+                width: 75, // 整体宽度1.5米 = 75px (1.5*50)
+                height: 75, // 整体宽度 = 长方形宽度(37.5px) + 半圆宽度(37.5px)
+                color: '#795548', 
+                icon: '⭕',
+                className: 'table-semi-round',
+                maxCount: 4,
+                desc: '长方形1.5m×0.75m + 半圆半径0.75m',
+                shape: 'semi-circle'
+            },
+            { 
+                id: 'table-sector', 
+                name: '三角形桌子', 
+                width: 150, // 边长约3米 = 150px (3*50)
+                height: 150, 
+                color: '#795548', 
+                icon: '▲',
+                className: 'table-sector',
+                maxCount: 4,
+                desc: '三角形桌子，边长约3m',
+                shape: 'triangle'
+            },
+            { 
+                id: 'door-double', 
+                name: '双开门', 
+                width: 125, // 2.5米 = 125px (2.5*50)
+                height: 10, // 宽度改为10px
+                color: '#8D6E63', 
+                icon: '🚪',
+                className: 'door-double',
+                maxCount: 3,
+                desc: '2.5m × 0.2m',
+                shape: 'door',
+                special: '仅可放置于特定墙上'
+            },
+            { 
+                id: 'door-single', 
+                name: '单开门', 
+                width: 75,  // 1.5米 = 75px (1.5*50)
+                height: 10, // 宽度改为10px
+                color: '#8D6E63', 
+                icon: '🚪',
+                className: 'door-single',
+                maxCount: 3,
+                desc: '1.5m × 0.2m',
+                shape: 'door',
+                special: '仅可放置于特定墙上'
+            },
+            { 
+                id: 'cabinet', 
+                name: '柜子', 
+                width: 45, // 0.9米 = 45px (0.9*50)
+                height: 45, 
+                color: '#A1887F', 
+                icon: '🗄️',
+                className: 'cabinet',
+                maxCount: 8,
+                desc: '0.9m × 0.9m',
+                shape: 'cabinet'
+            },
+            { 
+                id: 'cabinet-long', 
+                name: '长柜子', 
+                width: 123.5, // 2.47米 = 123.5px (2.47*50)
+                height: 45,    // 0.9米 = 45px (0.9*50)
+                color: '#A1887F', 
+                icon: '🗄️',
+                className: 'cabinet-long',
+                maxCount: 4,
+                desc: '2.47m × 0.9m',
+                shape: 'cabinet-long'
+            },
+            { 
+                id: 'floor-socket', 
+                name: '地插', 
+                width: 25, // 0.5米 = 25px (0.5*50)
+                height: 25, 
+                color: '#757575', 
+                icon: '🔌',
+                className: 'floor-socket',
+                maxCount: 10,
+                desc: '0.5m × 0.5m',
+                shape: 'socket'
+            },
+            { 
+                id: 'plant', 
+                name: '绿植', 
+                width: 10, // 0.2米 = 10px (0.2*50)
+                height: 10, 
+                color: '#DFEBB2', 
+                icon: '🌿',
+                className: 'plant',
+                maxCount: 20,
+                desc: '0.2m × 0.2m',
+                shape: 'leaf'
+            }
+        ];
+
+        // 存储已放置的元素
+        let placedElements = [];
+        let selectedElement = null;
+        let isDragging = false;
+        let isRotating = false;
+        let dragOffset = { x: 0, y: 0 };
+        let rotateOffset = { x: 0, y: 0 };
+        
+        // 初始化函数
+        function init() {
+            // 生成左侧元素库
+            generateElementLibrary();
+            
+            // 绘制网格和坐标轴（不显示标签）
+            drawGridAndAxes();
+            
+            // 加载保存的设计
+            loadSavedDesign();
+            
+            // 设置事件监听器
+            setupEventListeners();
+            
+            // 更新统计信息
+            updateStatistics();
+        }
+        
+        // 生成左侧元素库
+        function generateElementLibrary() {
+            const container = document.getElementById('elementsContainer');
+            container.innerHTML = '';
+            
+            draggableElements.forEach(element => {
+                const elementDiv = document.createElement('div');
+                elementDiv.className = 'element-item';
+                elementDiv.draggable = true;
+                elementDiv.dataset.id = element.id;
+                elementDiv.dataset.name = element.name;
+                elementDiv.dataset.width = element.width;
+                elementDiv.dataset.height = element.height;
+                elementDiv.dataset.color = element.color;
+                elementDiv.dataset.icon = element.icon;
+                elementDiv.dataset.class = element.className;
+                elementDiv.dataset.max = element.maxCount;
+                elementDiv.dataset.desc = element.desc;
+                
+                elementDiv.innerHTML = `
+                    <div class="element-icon">${element.icon}</div>
+                    <div class="element-name">${element.name}</div>
+                    <div class="element-size">${element.desc}</div>
+                    <div class="element-limit">上限: ${element.maxCount}</div>
+                `;
+                
+                // 拖拽事件
+                elementDiv.addEventListener('dragstart', handleDragStart);
+                
+                container.appendChild(elementDiv);
+            });
+        }
+        
+        // 绘制网格和坐标轴（不显示标签）
+        function drawGridAndAxes() {
+            const canvasInner = document.getElementById('canvasInner');
+            
+            // 清空现有的网格和坐标轴
+            document.querySelectorAll('.grid-line, .axis, .axis-label, .meter-mark, .meter-label').forEach(el => {
+                if (el.parentNode === canvasInner) {
+                    el.remove();
+                }
+            });
+            
+            // 绘制网格线 (每1米=50px)
+            const gridSize = 50; // 50px = 1米
+            
+            // 水平网格线
+            for (let y = 0; y <= classroomConfig.height; y += gridSize) {
+                const line = document.createElement('div');
+                line.className = 'grid-line x';
+                line.style.top = y + 'px';
+                canvasInner.appendChild(line);
+            }
+            
+            // 垂直网格线
+            for (let x = 0; x <= classroomConfig.width; x += gridSize) {
+                const line = document.createElement('div');
+                line.className = 'grid-line y';
+                line.style.left = x + 'px';
+                canvasInner.appendChild(line);
+            }
+            
+            // 绘制坐标轴（但不显示标签）
+            const xAxis = document.createElement('div');
+            xAxis.className = 'axis x';
+            canvasInner.appendChild(xAxis);
+            
+            const yAxis = document.createElement('div');
+            yAxis.className = 'axis y';
+            canvasInner.appendChild(yAxis);
+            
+            // 绘制刻度 (每1米=50px) - 但不显示标签
+            for (let i = 1; i <= 15; i++) {
+                const x = i * 50;
+                
+                // X轴刻度
+                const xMark = document.createElement('div');
+                xMark.className = 'meter-mark x';
+                xMark.style.left = x + 'px';
+                canvasInner.appendChild(xMark);
+            }
+            
+            for (let i = 1; i <= 10; i++) {
+                const y = i * 50;
+                
+                // Y轴刻度
+                const yMark = document.createElement('div');
+                yMark.className = 'meter-mark y';
+                yMark.style.top = y + 'px';
+                canvasInner.appendChild(yMark);
+            }
+        }
+        
+        // 处理拖拽开始
+        function handleDragStart(e) {
+            const elementId = e.target.dataset.id;
+            const elementData = draggableElements.find(el => el.id === elementId);
+            
+            if (elementData) {
+                // 检查是否达到上限
+                const currentCount = placedElements.filter(el => el.type === elementId).length;
+                if (currentCount >= elementData.maxCount) {
+                    e.preventDefault();
+                    showNotification(`已达到${elementData.name}的上限(${elementData.maxCount}个)`);
+                    return;
+                }
+                
+                e.dataTransfer.setData('text/plain', JSON.stringify({
+                    id: elementData.id,
+                    name: elementData.name,
+                    width: elementData.width,
+                    height: elementData.height,
+                    color: elementData.color,
+                    icon: elementData.icon,
+                    className: elementData.className,
+                    desc: elementData.desc
+                }));
+            }
+            
+            // 添加拖拽效果
+            e.target.classList.add('dragging');
+        }
+        
+        // 设置事件监听器
+        function setupEventListeners() {
+            const canvasContainer = document.getElementById('canvasContainer');
+            const canvasInner = document.getElementById('canvasInner');
+            
+            // 允许拖拽放置
+            canvasContainer.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy';
+            });
+            
+            // 处理拖拽放置
+            canvasContainer.addEventListener('drop', (e) => {
+                e.preventDefault();
+                
+                try {
+                    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                    
+                    // 检查是否达到上限
+                    const elementData = draggableElements.find(el => el.id === data.id);
+                    const currentCount = placedElements.filter(el => el.type === data.id).length;
+                    if (currentCount >= elementData.maxCount) {
+                        showNotification(`已达到${elementData.name}的上限(${elementData.maxCount}个)`);
+                        return;
+                    }
+                    
+                    // 获取放置位置
+                    const rect = canvasInner.getBoundingClientRect();
+                    const scrollLeft = canvasContainer.scrollLeft;
+                    const scrollTop = canvasContainer.scrollTop;
+                    
+                    // 计算相对于canvasInner的位置
+                    const x = e.clientX - rect.left + scrollLeft - data.width / 2;
+                    const y = e.clientY - rect.top + scrollTop - data.height / 2;
+                    
+                    // 创建新元素
+                    const elementId = createDraggableElement(data, x, y);
+                    
+                    // 保存到已放置元素列表
+                    // 圆桌和扇形桌子使用高优先级z-index，其他元素使用计算值
+                    const elementZIndex = (data.id === 'table-round' || data.id === 'table-sector') ? 1000 : calculateZIndex(data.width, data.height);
+                    placedElements.push({
+                        id: elementId,
+                        type: data.id,
+                        name: data.name,
+                        x: x,
+                        y: y,
+                        width: data.width,
+                        height: data.height,
+                        color: data.color,
+                        className: data.className,
+                        desc: data.desc,
+                        rotation: 0,
+                        zIndex: elementZIndex
+                    });
+                    
+                    // 保存到本地存储
+                    saveDesign();
+                    
+                    // 更新统计信息
+                    updateStatistics();
+                    
+                    showNotification(`已添加${data.name}`);
+                    
+                } catch (error) {
+                    console.error('拖放失败:', error);
+                    showNotification('拖放失败，请重试', true);
+                }
+            });
+            
+            // 移除拖拽样式
+            document.querySelectorAll('.element-item').forEach(item => {
+                item.addEventListener('dragend', () => {
+                    item.classList.remove('dragging');
+                });
+            });
+            
+            // 保存设计按钮
+            document.getElementById('save-design').addEventListener('click', saveDesign);
+            
+            // 重置设计按钮
+            document.getElementById('reset-design').addEventListener('click', resetDesign);
+            
+            // 导出配置按钮
+            document.getElementById('export-design').addEventListener('click', exportDesign);
+            
+            // 更新坐标按钮
+            document.getElementById('update-coords').addEventListener('click', updateElementCoords);
+            
+            // 更新旋转按钮
+            document.getElementById('update-rotation').addEventListener('click', updateElementRotation);
+            
+            // 旋转角度输入框支持Enter键直接更新，并确保小键盘也能输入
+            const rotationAngleInput = document.getElementById('rotation-angle');
+            
+            // 支持主键盘和小键盘的Enter键
+            rotationAngleInput.addEventListener('keypress', (e) => {
+                // 主键盘Enter键
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    e.preventDefault();
+                    updateElementRotation();
+                }
+            });
+            
+            // 支持小键盘Enter键（keydown事件，因为小键盘Enter可能不会触发keypress）
+            rotationAngleInput.addEventListener('keydown', (e) => {
+                // 小键盘Enter键（keyCode 108）
+                if (e.keyCode === 108) {
+                    e.preventDefault();
+                    updateElementRotation();
+                }
+                // 主键盘Enter键在keypress中已处理，这里不需要重复处理
+            });
+            
+            // 支持全局键盘输入旋转角度（当输入框有焦点时）
+            rotationAngleInput.addEventListener('input', (e) => {
+                // 实时预览旋转角度（可选，如果不想实时更新可以删除这部分）
+                // 这里我们只在Enter时更新，所以注释掉实时更新
+            });
+            
+            // 添加全局键盘监听，当选中元素时，按R键聚焦到旋转角度输入框，按S键聚焦到宽度输入框
+            document.addEventListener('keydown', (e) => {
+                const activeElement = document.activeElement;
+                // 如果当前焦点不在输入框中
+                if (activeElement.tagName !== 'INPUT' && activeElement.tagName !== 'TEXTAREA') {
+                    if (selectedElement) {
+                        // 如果按R键，聚焦到旋转角度输入框
+                        if (e.key === 'r' || e.key === 'R') {
+                            const rotationInput = document.getElementById('rotation-angle');
+                            if (rotationInput && !rotationInput.closest('.hidden')) {
+                                rotationInput.focus();
+                                rotationInput.select();
+                                e.preventDefault();
+                            }
+                        }
+                        // 如果按S键，聚焦到宽度输入框
+                        else if (e.key === 's' || e.key === 'S') {
+                            const sizeWidth = document.getElementById('size-width');
+                            if (sizeWidth && !sizeWidth.closest('.hidden')) {
+                                sizeWidth.focus();
+                                sizeWidth.select();
+                                e.preventDefault();
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 更新尺寸按钮
+            document.getElementById('update-size').addEventListener('click', updateElementSize);
+            
+            // 尺寸输入框支持Enter键直接更新，并确保小键盘也能输入
+            const sizeWidthInput = document.getElementById('size-width');
+            const sizeHeightInput = document.getElementById('size-height');
+            
+            // 宽度输入框Enter键支持
+            sizeWidthInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    e.preventDefault();
+                    updateElementSize();
+                }
+            });
+            
+            sizeWidthInput.addEventListener('keydown', (e) => {
+                if (e.keyCode === 108) { // 小键盘Enter
+                    e.preventDefault();
+                    updateElementSize();
+                }
+            });
+            
+            // 宽度输入框Enter键支持
+            sizeHeightInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    e.preventDefault();
+                    updateElementSize();
+                }
+            });
+            
+            sizeHeightInput.addEventListener('keydown', (e) => {
+                if (e.keyCode === 108) { // 小键盘Enter
+                    e.preventDefault();
+                    updateElementSize();
+                }
+            });
+            
+            
+            // 删除元素按钮
+            document.getElementById('delete-element').addEventListener('click', deleteSelectedElement);
+        }
+        
+        // 计算元素的z-index（面积越小，z-index越大，显示在上层）
+        function calculateZIndex(width, height) {
+            const area = width * height;
+            // 使用一个较大的基数减去面积，确保面积小的z-index大
+            return 10000 - area;
+        }
+        
+        // 创建可拖拽元素
+        function createDraggableElement(data, x, y) {
+            const draggableContainer = document.getElementById('draggable-container');
+            const elementId = data.id + '-' + Date.now();
+            
+            const elementDiv = document.createElement('div');
+            elementDiv.className = `draggable-element ${data.className}`;
+            elementDiv.id = elementId;
+            elementDiv.style.left = x + 'px';
+            elementDiv.style.top = y + 'px';
+            elementDiv.style.width = data.width + 'px';
+            elementDiv.style.height = data.height + 'px';
+            elementDiv.style.backgroundColor = data.color;
+            elementDiv.style.zIndex = calculateZIndex(data.width, data.height);
+            
+            // 根据元素类型设置不同的样式
+            if (data.id === 'table-round') {
+                // 圆桌特殊处理：提高优先级和可见性
+                elementDiv.style.borderRadius = '50%';
+                elementDiv.style.border = '3px solid #5D4037';
+                elementDiv.style.boxShadow = '0 0 8px rgba(0,0,0,0.3)';
+                elementDiv.style.zIndex = '1000'; // 设置高优先级，确保可见
+                elementDiv.style.opacity = '0.7'; // 与其他元素透明度统一
+                elementDiv.style.backgroundColor = '#8D6E63'; // 与单开门颜色统一
+            } else if (data.id === 'table-sector') {
+                // 三角形桌子特殊处理
+                // 等腰三角形：顶部为顶点，底边在下方
+                elementDiv.style.clipPath = 'polygon(50% 0%, 0% 100%, 100% 100%)';
+                elementDiv.style.borderRadius = '0';
+                elementDiv.style.border = '2px solid #5D4037';
+                elementDiv.style.zIndex = '1000'; // 设置高优先级，确保可见
+                elementDiv.style.opacity = '0.7'; // 与其他元素透明度统一
+                elementDiv.style.backgroundColor = '#795548';
+            } else if (data.id === 'door-double' || data.id === 'door-single') {
+                elementDiv.style.border = '2px solid #5D4037';
+            } else if (data.id !== 'table-semi-round' && data.id !== 'table-sector' && data.id !== 'plant') {
+                elementDiv.style.border = '2px solid ' + darkenColor(data.color, 30);
+            }
+            
+            // 添加序号
+            const currentCount = placedElements.filter(el => el.type === data.id).length + 1;
+            const counter = document.createElement('div');
+            counter.className = 'counter';
+            counter.textContent = currentCount;
+            elementDiv.appendChild(counter);
+            
+            // 如果是半圆桌，创建特殊结构
+            if (data.id === 'table-semi-round') {
+                const container = document.createElement('div');
+                container.className = 'semi-table-container';
+                container.style.width = '100%';
+                container.style.height = '100%';
+                container.style.position = 'relative';
+                
+                // 长方形部分：宽度=外层宽度，宽度=外层宽度的一半
+                const rectangle = document.createElement('div');
+                rectangle.className = 'semi-table-rectangle';
+                rectangle.style.width = data.width + 'px';
+                rectangle.style.height = (data.height / 2) + 'px';
+                rectangle.style.position = 'absolute';
+                rectangle.style.left = '0';
+                rectangle.style.top = '0';
+                rectangle.style.backgroundColor = '#795548';
+                rectangle.style.borderRadius = '4px';
+                container.appendChild(rectangle);
+                
+                // 半圆形部分：宽度=外层宽度，宽度=外层宽度的一半
+                const semicircle = document.createElement('div');
+                semicircle.className = 'semi-table-semicircle';
+                semicircle.style.width = data.width + 'px';
+                semicircle.style.height = (data.height / 2) + 'px';
+                semicircle.style.position = 'absolute';
+                semicircle.style.left = '0';
+                semicircle.style.top = (data.height / 2) + 'px';
+                semicircle.style.backgroundColor = '#795548';
+                semicircle.style.borderRadius = `0 0 ${data.width}px ${data.width}px`;
+                semicircle.style.opacity = '0.5';
+                container.appendChild(semicircle);
+                
+                // 虚线 (在长方形和半圆相交处)
+                const dashedLine = document.createElement('div');
+                dashedLine.className = 'semi-table-dashed-line';
+                dashedLine.style.width = '100%';
+                dashedLine.style.height = '2px';
+                dashedLine.style.position = 'absolute';
+                dashedLine.style.top = (data.height / 2) + 'px';
+                dashedLine.style.left = '0';
+                dashedLine.style.borderTop = '1px dashed white';
+                dashedLine.style.zIndex = '1';
+                container.appendChild(dashedLine);
+                
+                elementDiv.appendChild(container);
+                elementDiv.style.backgroundColor = 'transparent';
+                elementDiv.style.border = 'none';
+            }
+            
+            // 添加图标和标签
+            const icon = document.createElement('div');
+            icon.className = 'draggable-icon';
+            icon.textContent = data.icon;
+            elementDiv.appendChild(icon);
+            
+            const label = document.createElement('div');
+            label.className = 'draggable-label';
+            label.textContent = data.name;
+            elementDiv.appendChild(label);
+            
+            // 添加删除按钮
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'element-delete-btn';
+            deleteBtn.title = '删除元素';
+            deleteBtn.innerHTML = '×';
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteElement(elementId);
+            });
+            elementDiv.appendChild(deleteBtn);
+            
+            // 添加旋转控制点
+            const rotateHandle = document.createElement('div');
+            rotateHandle.className = 'rotate-handle';
+            rotateHandle.title = '拖拽旋转';
+            elementDiv.appendChild(rotateHandle);
+            
+            // 添加拖拽功能
+            makeElementDraggable(elementDiv);
+            
+            // 添加旋转功能
+            makeElementRotatable(elementDiv);
+            
+            // 添加点击选择功能
+            elementDiv.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectElement(elementDiv, data);
+            });
+            
+            draggableContainer.appendChild(elementDiv);
+            return elementId;
+        }
+        
+        // 使元素可拖拽
+        function makeElementDraggable(element) {
+            element.addEventListener('mousedown', startDrag);
+            element.addEventListener('touchstart', startDragTouch);
+            
+            // 鼠标拖拽
+            function startDrag(e) {
+                // 如果点击的是删除按钮或旋转按钮，则不启动拖拽
+                if (e.target.classList.contains('element-delete-btn') || 
+                    e.target.classList.contains('rotate-handle')) {
+                    return;
+                }
+                
+                e.preventDefault();
+                e.stopPropagation();
+                
+                isDragging = true;
+                selectedElement = element;
+                
+                // 计算偏移量
+                const rect = element.getBoundingClientRect();
+                dragOffset.x = e.clientX - rect.left;
+                dragOffset.y = e.clientY - rect.top;
+                
+                // 添加选中样式
+                document.querySelectorAll('.draggable-element').forEach(el => {
+                    el.classList.remove('selected');
+                });
+                element.classList.add('selected');
+                
+                // 显示元素信息
+                showElementInfo(element);
+                
+                // 添加全局鼠标移动和松开事件
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('mouseup', stopDrag);
+            }
+            
+            // 触摸屏拖拽
+            function startDragTouch(e) {
+                // 如果点击的是删除按钮或旋转按钮，则不启动拖拽
+                if (e.target.classList.contains('element-delete-btn') || 
+                    e.target.classList.contains('rotate-handle')) {
+                    return;
+                }
+                
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (e.touches.length === 1) {
+                    isDragging = true;
+                    selectedElement = element;
+                    
+                    const touch = e.touches[0];
+                    const rect = element.getBoundingClientRect();
+                    dragOffset.x = touch.clientX - rect.left;
+                    dragOffset.y = touch.clientY - rect.top;
+                    
+                    // 添加选中样式
+                    document.querySelectorAll('.draggable-element').forEach(el => {
+                        el.classList.remove('selected');
+                    });
+                    element.classList.add('selected');
+                    
+                    // 显示元素信息
+                    showElementInfo(element);
+                    
+                    // 添加全局触摸移动和结束事件
+                    document.addEventListener('touchmove', dragTouch);
+                    document.addEventListener('touchend', stopDragTouch);
+                }
+            }
+            
+            // 鼠标拖拽移动
+            function drag(e) {
+                if (!isDragging || !selectedElement) return;
+                
+                e.preventDefault();
+                
+                const canvasInner = document.getElementById('canvasInner');
+                const canvasContainer = document.getElementById('canvasContainer');
+                const canvasRect = canvasInner.getBoundingClientRect();
+                const scrollLeft = canvasContainer.scrollLeft;
+                const scrollTop = canvasContainer.scrollTop;
+                
+                // 计算新位置
+                let newX = e.clientX - canvasRect.left + scrollLeft - dragOffset.x;
+                let newY = e.clientY - canvasRect.top + scrollTop - dragOffset.y;
+                
+                // 限制在容器范围内
+                newX = Math.max(0, Math.min(newX, classroomConfig.width - selectedElement.offsetWidth));
+                newY = Math.max(0, Math.min(newY, classroomConfig.height + 150 - selectedElement.offsetHeight));
+                
+                // 应用新位置
+                selectedElement.style.left = newX + 'px';
+                selectedElement.style.top = newY + 'px';
+                
+                // 更新元素信息
+                updateElementInfo(selectedElement, newX, newY);
+            }
+            
+            // 触摸屏拖拽移动
+            function dragTouch(e) {
+                if (!isDragging || !selectedElement || e.touches.length !== 1) return;
+                
+                e.preventDefault();
+                
+                const touch = e.touches[0];
+                const canvasInner = document.getElementById('canvasInner');
+                const canvasContainer = document.getElementById('canvasContainer');
+                const canvasRect = canvasInner.getBoundingClientRect();
+                const scrollLeft = canvasContainer.scrollLeft;
+                const scrollTop = canvasContainer.scrollTop;
+                
+                // 计算新位置
+                let newX = touch.clientX - canvasRect.left + scrollLeft - dragOffset.x;
+                let newY = touch.clientY - canvasRect.top + scrollTop - dragOffset.y;
+                
+                // 限制在容器范围内
+                newX = Math.max(0, Math.min(newX, classroomConfig.width - selectedElement.offsetWidth));
+                newY = Math.max(0, Math.min(newY, classroomConfig.height + 150 - selectedElement.offsetHeight));
+                
+                // 应用新位置
+                selectedElement.style.left = newX + 'px';
+                selectedElement.style.top = newY + 'px';
+                
+                // 更新元素信息
+                updateElementInfo(selectedElement, newX, newY);
+            }
+            
+            // 停止鼠标拖拽
+            function stopDrag() {
+                if (isDragging && selectedElement) {
+                    // 更新已放置元素的位置
+                    const elementId = selectedElement.id;
+                    const elementIndex = placedElements.findIndex(el => el.id === elementId);
+                    
+                    if (elementIndex !== -1) {
+                        placedElements[elementIndex].x = parseInt(selectedElement.style.left);
+                        placedElements[elementIndex].y = parseInt(selectedElement.style.top);
+                        
+                        // 保存设计
+                        saveDesign();
+                    }
+                }
+                
+                isDragging = false;
+                document.removeEventListener('mousemove', drag);
+                document.removeEventListener('mouseup', stopDrag);
+            }
+            
+            // 停止触摸屏拖拽
+            function stopDragTouch() {
+                if (isDragging && selectedElement) {
+                    // 更新已放置元素的位置
+                    const elementId = selectedElement.id;
+                    const elementIndex = placedElements.findIndex(el => el.id === elementId);
+                    
+                    if (elementIndex !== -1) {
+                        placedElements[elementIndex].x = parseInt(selectedElement.style.left);
+                        placedElements[elementIndex].y = parseInt(selectedElement.style.top);
+                        
+                        // 保存设计
+                        saveDesign();
+                    }
+                }
+                
+                isDragging = false;
+                document.removeEventListener('touchmove', dragTouch);
+                document.removeEventListener('touchend', stopDragTouch);
+            }
+        }
+        
+        // 使元素可旋转
+        function makeElementRotatable(element) {
+            const rotateHandle = element.querySelector('.rotate-handle');
+            
+            rotateHandle.addEventListener('mousedown', startRotate);
+            rotateHandle.addEventListener('touchstart', startRotateTouch);
+            
+            function startRotate(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                isRotating = true;
+                selectedElement = element;
+                
+                // 获取元素中心点
+                const rect = element.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                // 计算初始角度
+                const startAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
+                
+                // 获取当前旋转角度
+                const transform = element.style.transform || '';
+                const match = transform.match(/rotate\(([-+]?[0-9]+\.?[0-9]*)deg\)/);
+                const currentAngle = match ? parseFloat(match[1]) : 0;
+                
+                // 添加全局鼠标移动和松开事件
+                document.addEventListener('mousemove', rotate);
+                document.addEventListener('mouseup', stopRotate);
+                
+                function rotate(e) {
+                    if (!isRotating || !selectedElement) return;
+                    
+                    e.preventDefault();
+                    
+                    // 计算新角度
+                    const newAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
+                    const angleDiff = newAngle - startAngle;
+                    const angleDeg = (angleDiff * 180 / Math.PI + currentAngle) % 360;
+                    
+                    // 应用旋转
+                    element.style.transform = `rotate(${angleDeg}deg)`;
+                    
+                    // 更新元素信息
+                    updateElementRotationInfo(element, angleDeg);
+                }
+                
+                function stopRotate() {
+                    if (isRotating && selectedElement) {
+                        // 更新已放置元素的旋转角度
+                        const elementId = selectedElement.id;
+                        const elementIndex = placedElements.findIndex(el => el.id === elementId);
+                        
+                        if (elementIndex !== -1) {
+                            const transform = selectedElement.style.transform || '';
+                            const match = transform.match(/rotate\(([-+]?[0-9]+\.?[0-9]*)deg\)/);
+                            const rotation = match ? parseFloat(match[1]) : 0;
+                            
+                            placedElements[elementIndex].rotation = rotation;
+                            
+                            // 保存设计
+                            saveDesign();
+                        }
+                    }
+                    
+                    isRotating = false;
+                    document.removeEventListener('mousemove', rotate);
+                    document.removeEventListener('mouseup', stopRotate);
+                }
+            }
+            
+            function startRotateTouch(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (e.touches.length === 1) {
+                    isRotating = true;
+                    selectedElement = element;
+                    
+                    const touch = e.touches[0];
+                    const rect = element.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+                    
+                    // 计算初始角度
+                    const startAngle = Math.atan2(touch.clientY - centerY, touch.clientX - centerX);
+                    
+                    // 获取当前旋转角度
+                    const transform = element.style.transform || '';
+                    const match = transform.match(/rotate\(([-+]?[0-9]+\.?[0-9]*)deg\)/);
+                    const currentAngle = match ? parseFloat(match[1]) : 0;
+                    
+                    // 添加全局触摸移动和结束事件
+                    document.addEventListener('touchmove', rotateTouch);
+                    document.addEventListener('touchend', stopRotateTouch);
+                    
+                    function rotateTouch(e) {
+                        if (!isRotating || !selectedElement || e.touches.length !== 1) return;
+                        
+                        e.preventDefault();
+                        
+                        const touch = e.touches[0];
+                        
+                        // 计算新角度
+                        const newAngle = Math.atan2(touch.clientY - centerY, touch.clientX - centerX);
+                        const angleDiff = newAngle - startAngle;
+                        const angleDeg = (angleDiff * 180 / Math.PI + currentAngle) % 360;
+                        
+                        // 应用旋转
+                        element.style.transform = `rotate(${angleDeg}deg)`;
+                        
+                        // 更新元素信息
+                        updateElementRotationInfo(element, angleDeg);
+                    }
+                    
+                    function stopRotateTouch() {
+                        if (isRotating && selectedElement) {
+                            // 更新已放置元素的旋转角度
+                            const elementId = selectedElement.id;
+                            const elementIndex = placedElements.findIndex(el => el.id === elementId);
+                            
+                            if (elementIndex !== -1) {
+                                const transform = selectedElement.style.transform || '';
+                                const match = transform.match(/rotate\(([-+]?[0-9]+\.?[0-9]*)deg\)/);
+                                const rotation = match ? parseFloat(match[1]) : 0;
+                                
+                                placedElements[elementIndex].rotation = rotation;
+                                
+                                // 保存设计
+                                saveDesign();
+                            }
+                        }
+                        
+                        isRotating = false;
+                        document.removeEventListener('touchmove', rotateTouch);
+                        document.removeEventListener('touchend', stopRotateTouch);
+                    }
+                }
+            }
+        }
+        
+        // 选择元素
+        function selectElement(element, data) {
+            // 移除其他元素的选中状态
+            document.querySelectorAll('.draggable-element').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // 添加选中状态
+            element.classList.add('selected');
+            selectedElement = element;
+            
+            // 显示元素信息
+            showElementInfo(element);
+        }
+        
+        // 显示元素信息
+        function showElementInfo(element) {
+            const infoPanel = document.getElementById('element-info');
+            const infoTitle = document.getElementById('info-title');
+            const infoCoords = document.getElementById('info-coords');
+            const infoSize = document.getElementById('info-size');
+            const infoRotation = document.getElementById('info-rotation');
+            const coordX = document.getElementById('coord-x');
+            const coordY = document.getElementById('coord-y');
+            const rotationAngle = document.getElementById('rotation-angle');
+            
+            // 获取元素数据
+            const elementId = element.id;
+            const elementData = placedElements.find(el => el.id === elementId);
+            
+            if (elementData) {
+                infoTitle.textContent = elementData.name;
+                infoCoords.textContent = `坐标: (${elementData.x}px, ${elementData.y}px)`;
+                infoSize.textContent = `尺寸: ${(elementData.width/50).toFixed(2)}m × ${(elementData.height/50).toFixed(2)}m`;
+                
+                // 获取旋转角度
+                const transform = element.style.transform || '';
+                const match = transform.match(/rotate\(([-+]?[0-9]+\.?[0-9]*)deg\)/);
+                const rotation = match ? parseFloat(match[1]) : 0;
+                infoRotation.textContent = `旋转: ${rotation.toFixed(1)}°`;
+                
+                coordX.value = elementData.x;
+                coordY.value = elementData.y;
+                rotationAngle.value = rotation.toFixed(1);
+                
+                // 填充尺寸输入框（转换为米）
+                const sizeWidth = document.getElementById('size-width');
+                const sizeHeight = document.getElementById('size-height');
+                if (sizeWidth && sizeHeight) {
+                    sizeWidth.value = (elementData.width / 50).toFixed(2);
+                    sizeHeight.value = (elementData.height / 50).toFixed(2);
+                }
+                
+                infoPanel.classList.remove('hidden');
+                
+                // 自动聚焦到旋转角度输入框，方便直接输入
+                setTimeout(() => {
+                    rotationAngle.focus();
+                    rotationAngle.select(); // 选中现有文本，方便直接输入新值
+                }, 100);
+            }
+        }
+        
+        // 更新元素信息
+        function updateElementInfo(element, x, y) {
+            const infoCoords = document.getElementById('info-coords');
+            const infoSize = document.getElementById('info-size');
+            const coordX = document.getElementById('coord-x');
+            const coordY = document.getElementById('coord-y');
+            
+            const elementData = placedElements.find(el => el.id === element.id);
+            if (elementData) {
+                infoCoords.textContent = `坐标: (${Math.round(x)}px, ${Math.round(y)}px)`;
+                infoSize.textContent = `尺寸: ${(elementData.width/50).toFixed(2)}m × ${(elementData.height/50).toFixed(2)}m`;
+                coordX.value = Math.round(x);
+                coordY.value = Math.round(y);
+            }
+        }
+        
+        // 更新元素旋转信息
+        function updateElementRotationInfo(element, rotation) {
+            const infoRotation = document.getElementById('info-rotation');
+            const rotationAngle = document.getElementById('rotation-angle');
+            
+            infoRotation.textContent = `旋转: ${rotation.toFixed(1)}°`;
+            rotationAngle.value = rotation.toFixed(1);
+        }
+        
+        // 更新元素尺寸
+        function updateElementSize() {
+            if (!selectedElement) return;
+            
+            const sizeWidth = document.getElementById('size-width');
+            const sizeHeight = document.getElementById('size-height');
+            
+            let newWidthM = parseFloat(sizeWidth.value) || 0;
+            let newHeightM = parseFloat(sizeHeight.value) || 0;
+            
+            // 确保尺寸为正数
+            if (newWidthM <= 0 || newHeightM <= 0) {
+                showNotification('尺寸必须大于0', true);
+                return;
+            }
+            
+            // 转换为像素（1米 = 50px）
+            let newWidth = newWidthM * 50;
+            let newHeight = newHeightM * 50;
+            
+            // 确保最小尺寸（至少5px，避免元素完全不可见）
+            if (newWidth < 5) newWidth = 5;
+            if (newHeight < 5) newHeight = 5;
+            
+            // 获取元素类型
+            const elementId = selectedElement.id;
+            const elementIndex = placedElements.findIndex(el => el.id === elementId);
+            const elementType = elementIndex !== -1 ? placedElements[elementIndex].type : null;
+            
+            // 更新元素尺寸
+            selectedElement.style.width = newWidth + 'px';
+            selectedElement.style.height = newHeight + 'px';
+            
+            // 确保元素可见
+            selectedElement.style.display = 'flex';
+            selectedElement.style.visibility = 'visible';
+            
+            // 特殊处理：根据元素类型更新特殊样式
+            if (elementType === 'table-round') {
+                // 圆桌：确保borderRadius正确（50%会自动适应新尺寸）
+                selectedElement.style.borderRadius = '50%';
+                selectedElement.style.border = '3px solid #5D4037';
+                selectedElement.style.boxShadow = '0 0 8px rgba(0,0,0,0.3)';
+                selectedElement.style.opacity = '0.7';
+                selectedElement.style.backgroundColor = '#8D6E63';
+            } else if (elementType === 'table-sector') {
+                // 三角形桌子：确保clipPath正确（百分比会自动适应新尺寸）
+                selectedElement.style.clipPath = 'polygon(50% 0%, 0% 100%, 100% 100%)';
+                selectedElement.style.borderRadius = '0';
+                selectedElement.style.border = '2px solid #5D4037';
+                selectedElement.style.opacity = '0.7';
+                selectedElement.style.backgroundColor = '#795548';
+            } else if (elementType === 'table-semi-round') {
+                // 半圆桌：更新内部子元素的尺寸（公共函数）
+                updateSemiRoundTable(selectedElement, newWidth, newHeight);
+            } else if (elementType === 'door-double' || elementType === 'door-single') {
+                // 门：确保边框样式正确
+                selectedElement.style.border = '2px solid #5D4037';
+            }
+            
+            // 更新已放置元素的尺寸
+            if (elementIndex !== -1) {
+                // 检查并调整位置，确保元素不会超出画布范围
+                const currentX = parseInt(selectedElement.style.left) || 0;
+                const currentY = parseInt(selectedElement.style.top) || 0;
+                const maxX = classroomConfig.width - newWidth;
+                const maxY = classroomConfig.height + 150 - newHeight; // 包括下方区域
+                
+                let adjustedX = Math.max(0, Math.min(currentX, maxX));
+                let adjustedY = Math.max(0, Math.min(currentY, maxY));
+                
+                // 如果位置需要调整，更新位置
+                if (adjustedX !== currentX || adjustedY !== currentY) {
+                    selectedElement.style.left = adjustedX + 'px';
+                    selectedElement.style.top = adjustedY + 'px';
+                    placedElements[elementIndex].x = adjustedX;
+                    placedElements[elementIndex].y = adjustedY;
+                }
+                
+                placedElements[elementIndex].width = newWidth;
+                placedElements[elementIndex].height = newHeight;
+                
+                // 更新z-index（因为尺寸改变了）
+                // 特殊元素（圆桌、扇形桌）保持高优先级z-index
+                if (elementType === 'table-round' || elementType === 'table-sector') {
+                    placedElements[elementIndex].zIndex = 1000;
+                    selectedElement.style.zIndex = '1000';
+                } else {
+                    placedElements[elementIndex].zIndex = calculateZIndex(newWidth, newHeight);
+                    selectedElement.style.zIndex = placedElements[elementIndex].zIndex;
+                }
+                
+                // 保存设计
+                saveDesign();
+                
+                // 更新显示
+                const infoSize = document.getElementById('info-size');
+                infoSize.textContent = `尺寸: ${newWidthM.toFixed(2)}m × ${newHeightM.toFixed(2)}m`;
+                
+                // 更新坐标显示
+                updateElementInfo(selectedElement, adjustedX, adjustedY);
+                
+                // 显示通知
+                showNotification(`尺寸已更新为 ${newWidthM.toFixed(2)}m × ${newHeightM.toFixed(2)}m`);
+            }
+        }
+        
+        // 更新元素坐标
+        function updateElementCoords() {
+            if (!selectedElement) return;
+            
+            const coordX = document.getElementById('coord-x');
+            const coordY = document.getElementById('coord-y');
+            
+            const newX = parseInt(coordX.value) || 0;
+            const newY = parseInt(coordY.value) || 0;
+            
+            // 更新元素位置
+            selectedElement.style.left = newX + 'px';
+            selectedElement.style.top = newY + 'px';
+            
+            // 更新已放置元素的位置
+            const elementId = selectedElement.id;
+            const elementIndex = placedElements.findIndex(el => el.id === elementId);
+            
+            if (elementIndex !== -1) {
+                placedElements[elementIndex].x = newX;
+                placedElements[elementIndex].y = newY;
+                
+                // 保存设计
+                saveDesign();
+                
+                // 更新显示
+                updateElementInfo(selectedElement, newX, newY);
+            }
+        }
+        
+        // 更新元素旋转
+        function updateElementRotation() {
+            if (!selectedElement) return;
+            
+            const rotationAngle = document.getElementById('rotation-angle');
+            let newRotation = parseFloat(rotationAngle.value) || 0;
+            
+            // 确保角度在0-360度范围内
+            newRotation = newRotation % 360;
+            if (newRotation < 0) newRotation += 360;
+            
+            // 应用旋转
+            selectedElement.style.transform = `rotate(${newRotation}deg)`;
+            
+            // 更新已放置元素的旋转角度
+            const elementId = selectedElement.id;
+            const elementIndex = placedElements.findIndex(el => el.id === elementId);
+            
+            if (elementIndex !== -1) {
+                placedElements[elementIndex].rotation = newRotation;
+                
+                // 保存设计
+                saveDesign();
+                
+                // 更新显示
+                updateElementRotationInfo(selectedElement, newRotation);
+                
+                // 显示通知
+                showNotification(`旋转角度已更新为 ${newRotation.toFixed(1)}°`);
+            }
+        }
+        
+        // 删除选中元素
+        function deleteSelectedElement() {
+            if (!selectedElement) return;
+            
+            const elementId = selectedElement.id;
+            deleteElement(elementId);
+        }
+        
+        // 删除元素
+        function deleteElement(elementId) {
+            if (!confirm('确定要删除这个元素吗？')) {
+                return;
+            }
+            
+            // 从DOM中移除元素
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.remove();
+            }
+            
+            // 从已放置元素数组中移除
+            const elementIndex = placedElements.findIndex(el => el.id === elementId);
+            if (elementIndex !== -1) {
+                placedElements.splice(elementIndex, 1);
+            }
+            
+            // 隐藏元素信息面板
+            const infoPanel = document.getElementById('element-info');
+            infoPanel.classList.add('hidden');
+            
+            // 清除选中状态
+            selectedElement = null;
+            
+            // 保存设计
+            saveDesign();
+            
+            // 更新统计信息
+            updateStatistics();
+            
+            // 显示通知
+            showNotification('元素已删除');
+        }
+        
+        // 更新统计信息
+        function updateStatistics() {
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.innerHTML = '';
+            
+            draggableElements.forEach(element => {
+                const count = placedElements.filter(el => el.type === element.id).length;
+                const statItem = document.createElement('div');
+                statItem.className = 'stat-item';
+                
+                const statName = document.createElement('div');
+                statName.className = 'stat-name';
+                statName.textContent = element.name;
+                
+                const statValue = document.createElement('div');
+                statValue.className = 'stat-value';
+                statValue.textContent = `${count}/${element.maxCount}`;
+                
+                // 如果达到上限，标记为红色
+                if (count >= element.maxCount) {
+                    statValue.style.color = '#e74c3c';
+                }
+                
+                statItem.appendChild(statName);
+                statItem.appendChild(statValue);
+                statsGrid.appendChild(statItem);
+            });
+        }
+        
+        // 保存设计到本地存储
+        function saveDesign() {
+            const design = {
+                elements: placedElements,
+                savedAt: new Date().toISOString()
+            };
+            
+            localStorage.setItem('classroomDesign', JSON.stringify(design));
+            showNotification('设计已保存');
+        }
+        
+        // 加载保存的设计
+        function loadSavedDesign() {
+            const savedDesign = localStorage.getItem('classroomDesign');
+            
+            if (savedDesign) {
+                try {
+                    const design = JSON.parse(savedDesign);
+                    placedElements = design.elements || [];
+                    
+                    // 重新创建已放置的元素
+                    const draggableContainer = document.getElementById('draggable-container');
+                    draggableContainer.innerHTML = '';
+                    
+                    placedElements.forEach(elementData => {
+                        const data = draggableElements.find(el => el.id === elementData.type);
+                        if (data) {
+                            // 使用保存的尺寸创建元素（如果存在），否则使用默认尺寸
+                            const elementWidth = elementData.width || data.width;
+                            const elementHeight = elementData.height || data.height;
+                            
+                            // 临时修改data的尺寸，以便createDraggableElement使用正确的尺寸
+                            const originalWidth = data.width;
+                            const originalHeight = data.height;
+                            data.width = elementWidth;
+                            data.height = elementHeight;
+                            
+                            const elementId = createDraggableElement(data, elementData.x, elementData.y);
+                            
+                            // 恢复原始数据
+                            data.width = originalWidth;
+                            data.height = originalHeight;
+                            
+                            // 应用保存的旋转角度
+                            const element = document.getElementById(elementId);
+                            if (element) {
+                                if (elementData.rotation) {
+                                    element.style.transform = `rotate(${elementData.rotation}deg)`;
+                                }
+                                
+                                // 应用保存的尺寸（确保尺寸正确）
+                                element.style.width = elementWidth + 'px';
+                                element.style.height = elementHeight + 'px';
+                                
+                                // 确保元素可见
+                                element.style.display = 'flex';
+                                element.style.visibility = 'visible';
+                                
+                                // 特殊处理：根据元素类型应用特殊样式
+                                if (elementData.type === 'table-round') {
+                                    // 圆桌：确保borderRadius正确
+                                    element.style.borderRadius = '50%';
+                                    element.style.border = '3px solid #5D4037';
+                                    element.style.boxShadow = '0 0 8px rgba(0,0,0,0.3)';
+                                    element.style.opacity = '0.7';
+                                    element.style.backgroundColor = '#8D6E63';
+                                    element.style.zIndex = '1000';
+                                } else if (elementData.type === 'table-sector') {
+                                    // 三角形桌子：确保clipPath正确
+                                    element.style.clipPath = 'polygon(50% 0%, 0% 100%, 100% 100%)';
+                                    element.style.borderRadius = '0';
+                                    element.style.border = '2px solid #5D4037';
+                                    element.style.opacity = '0.7';
+                                    element.style.backgroundColor = '#795548';
+                                    element.style.zIndex = '1000';
+                                } else if (elementData.type === 'table-semi-round') {
+                                    // 半圆桌：更新内部子元素的尺寸（公共函数）
+                                    updateSemiRoundTable(element, elementWidth, elementHeight);
+                                    if (elementData.zIndex) {
+                                        element.style.zIndex = elementData.zIndex;
+                                    }
+                                } else if (elementData.type === 'door-double' || elementData.type === 'door-single') {
+                                    // 门：确保边框样式正确
+                                    element.style.border = '2px solid #5D4037';
+                                    if (elementData.zIndex) {
+                                        element.style.zIndex = elementData.zIndex;
+                                    }
+                                } else {
+                                    // 其他元素：应用保存的z-index
+                                    if (elementData.zIndex) {
+                                        element.style.zIndex = elementData.zIndex;
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    // 更新统计信息
+                    updateStatistics();
+                    
+                    console.log('设计已加载');
+                } catch (error) {
+                    console.error('加载设计失败:', error);
+                }
+            }
+        }
+        
+        // 重置设计
+        function resetDesign() {
+            if (confirm('确定要重置所有元素吗？这将清除所有已添加的元素。')) {
+                placedElements = [];
+                selectedElement = null;
+                
+                const draggableContainer = document.getElementById('draggable-container');
+                draggableContainer.innerHTML = '';
+                
+                const infoPanel = document.getElementById('element-info');
+                infoPanel.classList.add('hidden');
+                
+                localStorage.removeItem('classroomDesign');
+                
+                // 更新统计信息
+                updateStatistics();
+                
+                showNotification('设计已重置');
+            }
+        }
+        
+        // 导出设计配置
+        function exportDesign() {
+            const design = {
+                classroom: {
+                    width: classroomConfig.width,
+                    height: classroomConfig.height,
+                    unit: 'px',
+                    scale: '1px = 2cm (实际1m = 50px)'
+                },
+                fixedShapes: fixedShapes.map(shape => ({
+                    name: shape.name,
+                    x: shape.x,
+                    y: shape.y,
+                    width: shape.width,
+                    height: shape.height,
+                    color: shape.color,
+                    desc: shape.desc
+                })),
+                placedElements: placedElements.map(el => ({
+                    ...el,
+                    // 计算实际米数
+                    widthM: (el.width / 50).toFixed(2),
+                    heightM: (el.height / 50).toFixed(2)
+                })),
+                exportDate: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(design, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = '教室设计-' + new Date().toISOString().split('T')[0] + '.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            showNotification('设计配置已导出为JSON文件');
+        }
+        
+        // 显示通知
+        function showNotification(message, isError = false) {
+            // 创建通知元素
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${isError ? '#e74c3c' : '#2ecc71'};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 1000;
+                font-weight: 500;
+                animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s;
+                animation-fill-mode: forwards;
+            `;
+            
+            notification.textContent = message;
+            
+            // 添加CSS动画
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes fadeOut {
+                    from { opacity: 1; }
+                    to { opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            document.body.appendChild(notification);
+            
+            // 3秒后移除通知
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
+        }
+        
+        // 颜色变暗函数
+        function darkenColor(color, percent) {
+            // 如果是十六进制颜色
+            if (color.startsWith('#')) {
+                let r = parseInt(color.substr(1, 2), 16);
+                let g = parseInt(color.substr(3, 2), 16);
+                let b = parseInt(color.substr(5, 2), 16);
+                
+                r = Math.floor(r * (100 - percent) / 100);
+                g = Math.floor(g * (100 - percent) / 100);
+                b = Math.floor(b * (100 - percent) / 100);
+                
+                return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+            }
+            
+            return color;
+        }
+
+        // 半圆桌内部结构更新（抽取公共逻辑，避免重复代码）
+        function updateSemiRoundTable(element, width, height) {
+            if (!element) return;
+            const container = element.querySelector('.semi-table-container');
+            if (!container) return;
+
+            // 矩形部分：宽度=外层宽度，高度=外层高度的一半
+            const rectangle = container.querySelector('.semi-table-rectangle');
+            if (rectangle) {
+                rectangle.style.width = width + 'px';
+                rectangle.style.height = (height / 2) + 'px';
+            }
+
+            // 半圆形部分：宽度=外层宽度，高度=外层高度的一半
+            const semicircle = container.querySelector('.semi-table-semicircle');
+            if (semicircle) {
+                semicircle.style.width = width + 'px';
+                semicircle.style.height = (height / 2) + 'px';
+                semicircle.style.borderRadius = `0 0 ${width}px ${width}px`;
+                semicircle.style.top = (height / 2) + 'px';
+            }
+
+            // 虚线位置：在外层高度的一半处
+            const dashedLine = container.querySelector('.semi-table-dashed-line');
+            if (dashedLine) {
+                dashedLine.style.top = (height / 2) + 'px';
+            }
+
+            // 确保半圆桌容器本身透明、不带边框
+            element.style.backgroundColor = 'transparent';
+            element.style.border = 'none';
+        }
+        
+        // 点击画布其他区域取消选择
+        document.getElementById('canvasInner').addEventListener('click', (e) => {
+            // 如果点击的不是可拖拽元素
+            if (!e.target.closest('.draggable-element') && !e.target.closest('.fixed-shape')) {
+                // 移除所有元素的选中状态
+                document.querySelectorAll('.draggable-element').forEach(el => {
+                    el.classList.remove('selected');
+                });
+                
+                // 隐藏元素信息面板
+                const infoPanel = document.getElementById('element-info');
+                infoPanel.classList.add('hidden');
+                
+                selectedElement = null;
+            }
+        });
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
 </body>
 </html>
