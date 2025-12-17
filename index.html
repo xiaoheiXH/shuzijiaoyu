@@ -455,6 +455,12 @@
             background-color: #795548;
         }
 
+        .whiteboard {
+            background-color: #ffffff;
+            border: 2px solid #90A4AE;
+            border-radius: 4px;
+        }
+
         .table-round {
             border-radius: 100%;
             background-color: #8D6E63 !important;
@@ -997,6 +1003,18 @@
                 shape: 'triangle'
             },
             { 
+                id: 'whiteboard', 
+                name: '白板', 
+                width: 75, // 1.5米 = 75px (1.5*50)
+                height: 50, // 1米 = 50px (1*50)
+                color: '#FFFFFF', 
+                icon: '📋',
+                className: 'whiteboard',
+                maxCount: 2,
+                desc: '1.5m × 1m',
+                shape: 'board'
+            },
+            { 
                 id: 'door-double', 
                 name: '双开门', 
                 width: 125, // 2.5米 = 125px (2.5*50)
@@ -1299,8 +1317,11 @@
                 });
             });
             
-            // 保存设计按钮
-            document.getElementById('save-design').addEventListener('click', saveDesign);
+            // 保存设计按钮：只在点击按钮时，既保存到本地又触发下载
+            document.getElementById('save-design').addEventListener('click', () => {
+                saveDesign();      // 保存到 localStorage（供自动恢复使用）
+                exportDesign();    // 仅在手动点击“保存设计”时导出并下载
+            });
             
             // 重置设计按钮
             document.getElementById('reset-design').addEventListener('click', resetDesign);
